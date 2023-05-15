@@ -38,8 +38,6 @@ def addToMatching(tutor, index, matching, students):
         session.add(index, students)
         matching[tutor] = [session]
     else:
-        if tutor.name == "Rachel Hu":
-            print(student, student.times)
         teachingTimes = set()
         for session in matching[tutor]:
             teachingTimes.add(session.time)
@@ -54,9 +52,20 @@ def addToMatching(tutor, index, matching, students):
                 session = Session(tutor, student.subject, tutor.numStudents, time)
                 session.add(index, students)
                 matching[tutor].append(session)
-        
+
+def removeFromMatching(student, matching):
+    for session in matching[student.tutor]:
+        if student in session.students:
+            session.remove(student)
+            session.capacity += 1
+            if (session.students == []):
+                matching[student.tutor].remove(session)
+            return
+
 def betterFit(tutor, student, matching):
     oldTutor = student.tutor
+    if (not tutor in matching and len(matching[oldTutor]) > 1): return True
+    return False
 
 
 def match(tutors, students):
@@ -68,30 +77,34 @@ def match(tutors, students):
         student = students[i]
         if (not student.matched):
             addToMatching(tutor, i, matching, students)
-        # elif (betterFit(tutor, student, matching)):
-        #     removeFromMatching(student, matching)
-        #     addToMatching(tutor, student, matching)
+        elif (betterFit(tutor, student, matching)):
+            removeFromMatching(student, matching)
+            addToMatching(tutor, student, matching)
         tutor = findNextTutor(tutors, matching)
     return matching
 
+def report(students):
+    unmatchedStudents = []
+    subjects = dict()
+    for student in students:
+        if (not student.matched):
+            unmatchedStudents.append(student)
+            subjects[student.subject] = subjects.get(student.subject, []) + [student]
+    print(f"\nthere are {len(unmatchedStudents)} unmatched students:", unmatchedStudents)
+    print("\nTheir subjects are", subjects)
+
 def res():
     tutors, students = createData()
-    # rachelHu = tutors[0]
-    # print("Rachel Hu:")
-    # for i in rachelHu.prefList:
-    #     student = students[i]
-    #     print(student, student.times)
+    for tutor in tutors:
+        print(tutor, [students[i].name for i in tutor.prefList], "\n")
     matching = match(tutors, students)
     print("\n")
     for tutor in matching:
         print(tutor, ":", matching[tutor])
-    unmatchedStudents = set()
-    for student in students:
-        if (not student.matched): unmatchedStudents.add(student)
-    print(f"\nthere are {len(unmatchedStudents)} unmatched students:", unmatchedStudents)
-    unmatchedTutors = set()
+    report(students)
+    unmatchedTutors = []
     for tutor in tutors:
-        if (not tutor in matching): unmatchedTutors.add(tutor)
+        if (not tutor in matching): unmatchedTutors.append(tutor)
     print(f"\nthere are {len(unmatchedTutors)} unmatched tutors:", unmatchedTutors)
 
 res()

@@ -67,9 +67,12 @@ class Tutor:
         for i in range(len(students)):
             student = students[i]
             if (student.times & self.times != set()) and self.subjectMatch(student.subject):
-                self.prefList.append(i)
-        # self.prefList.sort()
-        # self.prefList = [students.index(student) for student in self.prefList]
+                self.prefList.append(student)
+        self.groupStudents()
+        self.prefList = [students.index(student) for student in self.prefList]
+    
+    def groupStudents(self):
+        return
 
 class Student:
     def __init__(self, email, pfirst, plast, phone, firstName, lastName, school, grade, subject, times, other, pr, u, *garbage):
@@ -95,8 +98,8 @@ class Student:
     def __hash__(self):
         return hash(self.name)
     
-    def __lt__(self, other):
-        return (not self.prio and other.prio) or (self.info[1] > other.info[1]) or (self.understanding > other.understanding)
+    # def __lt__(self, other):
+    #     return (not self.prio and other.prio) or (self.info[1] > other.info[1]) or (self.understanding > other.understanding)
 
 class Session:
     def __init__(self, tutor, subject, capacity, time):
