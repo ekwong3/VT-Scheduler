@@ -1,97 +1,129 @@
+import copy
+
 def parseTimes(times):
-    res = {0:"", 1:"", 2:"", 3:"", 4:""}
-    for time in range(len(times)):
-        res[time] = set(times[time].split(", "))
+    res = set()
+    if times == "": return res
+    for time in times.split(", "):
+        if time[0].isdigit():
+            res.add(time[:3])
     return res
 
-def clearSpaces(name):
-    while (name[0] == ' '):
-        name = name[1:]
-    while (name[-1] == ' '):
-        name = name[:-1]
-    return name
+def cleanup(name):
+    name = name.strip()
+    res = ""
+    for n in name.split():
+        n = n.lower()
+        n = n[0].upper() + n[1:]
+        res += n + " "
+    return res[:-1]
 
-class Student():
-    order = 0
-
-    def __init__(self, firstName, lastName, parent, email, prefClass, 
-                 otherClass, times, priorityL, priorityI):
-        self.firstName = clearSpaces(firstName)
-        self.lastName = clearSpaces(lastName)
-        self.name = self.firstName + " " + self.lastName
-        self.parent = parent
-        self.email = email
-        self.prefClass = prefClass
-        self.otherClass = otherClass
-        self.times = parseTimes(times)
-        self.priorityLearning = True if priorityL == "Yes" else False
-        self.priorityIncome = True if priorityI == "Yes" else False
-        self.matched = False
-        self.placeInLine = Student.order
-        Student.order += 1
-    
-    def __repr__(self):
-        return (self.name)
-    
-    def __hash__(self):
-        return hash(str(self))
-    
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-class Tutor():
-    def __init__(self, firstName, lastName, email, numClasses, whichClasses, 
-                 times, zoom, password):
-        self.firstName = clearSpaces(firstName)
-        self.lastName = clearSpaces(lastName)
-        self.name = self.firstName + " " + self.lastName
-        self.email = email
-        self.numClasses = int(numClasses)
-        self.subjects = set(whichClasses.split(", "))
-        self.times = parseTimes(times)
-        self.zoom = zoom
-        self.password = password
-        self.matched = False
-
-    def __repr__(self):
-        return (self.name)
-    
-    def __hash__(self):
-        return hash(str(self))
-    
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-def getDay(n):
-    if (n == 0):
-        return "Monday"
-    elif (n == 1):
-        return "Tuesday"
-    elif (n == 2):
-        return "Wednesday"
-    elif (n == 3):
-        return "Thursday"
-    elif (n == 4):
-        return "Friday"
+def getTimes(times):
+    res = ""
+    for time in times:
+        res += str(time) + ", "
+    if res == set():
+        res = "no times"
     else:
-        return ""
+        res = res[:-2]
+    return res
 
-class Session():
-    def __init__(self, student, tutor, subject, day, time, capacity):
-        self.students = set([student])
-        self.tutor = tutor
-        self.subject = subject
-        self.day = day
-        self.time = time
-        self.capacity = capacity
-    
+class Tutor:
+    def __init__(self, t, link, email, fName, lName, school, grade, sessions, numStudents, subjects, times, *garbage):
+        self.training = True if t == 'Y' else False
+        self.link = link
+        self.email = email
+        self.name = cleanup(fName + " " + lName)
+        self.info = (school, grade)
+        self.numSessions = int(sessions)
+        self.numStudents = int(numStudents)
+        self.subjects = subjects
+        self.times = parseTimes(times)
+        self.prefList = []
+        self.full = False
+
     def __repr__(self):
-        return (self.tutor.name + " teaching " + 
-                ", ".join([student.name for student in self.students]) + " " +
-                self.subject + " at " + self.time + " on " + getDay(self.day))
-    
-    def __hash__(self):
-        return hash(str(self))
+        times = getTimes(self.times)
+        return f'{self.name}'# can tutor {self.numStudents} students in {self.numSessions} classes at {times}\n'
     
     def __eq__(self, other):
-        return str(self) == str(other)
+        return isinstance(other, Student) and self.name == other.name
+    
+    def __hash__(self):
+        return hash(self.name)
+    
+    def subjectMatch(self, subject):
+        if (subject == "Algebra 1"):
+            return (subject in self.subjects)
+        (grade, _, subj) = subject.split()
+        fullSubject = ""
+        grade = int(grade[0])
+        if (1 <= grade <= 5):
+            fullSubject += "Elementary School " + subj
+        else:
+            fullSubject += "Middle School " + subj
+        return (fullSubject in self.subjects)
+    
+    def makePrefs(self, students):
+        for i in range(len(students)):
+            student = students[i]
+            if (student.times & self.times != set()) and self.subjectMatch(student.subject):
+                self.prefList.append(i)
+        # self.prefList.sort()
+        # self.prefList = [students.index(student) for student in self.prefList]
+
+class Student:
+    def __init__(self, email, pfirst, plast, phone, firstName, lastName, school, grade, subject, times, other, pr, u, *garbage):
+        self.email = email
+        self.parent = cleanup(pfirst + " " + plast)
+        self.phone = phone
+        self.name = cleanup(firstName + " " + lastName)
+        self.info = (school, grade)
+        self.subject = subject
+        self.times = parseTimes(times)
+        self.prio = True if pr == "Yes" else False
+        self.understanding = int(u)
+        self.matched = False
+        self.tutor = None
+
+    def __repr__(self):
+        times = getTimes(self.times)
+        return f'{self.name}' # wanting to take {self.subject} at {times}\n'
+    
+    def __eq__(self, other):
+        return isinstance(other, Student) and self.name == other.name
+    
+    def __hash__(self):
+        return hash(self.name)
+    
+    def __lt__(self, other):
+        return (not self.prio and other.prio) or (self.info[1] > other.info[1]) or (self.understanding > other.understanding)
+
+class Session:
+    def __init__(self, tutor, subject, capacity, time):
+        self.tutor = tutor
+        self.students = []
+        self.capacity = capacity
+        self.time = time
+        self.subject = subject
+
+    def combinedTimes(self, student):
+        times = student.times & self.tutor.times
+        for otherStudent in self.students:
+            times &= otherStudent.times
+        return times
+
+    def add(self, index, students):
+        student = students[index]
+        times = self.combinedTimes(student)
+        self.time = times.pop()
+        self.students.append(student)
+        self.capacity -= 1
+        students[index].tutor = self.tutor
+        students[index].matched = True
+    
+    def canAdd(self, student):
+        times = self.combinedTimes(student)
+        return (self.capacity > 0) and (self.subject == student.subject) and (times != set())
+    
+    def __repr__(self):
+        return f"{self.subject} being taught to {[student.name for student in self.students]} at {self.time}"
