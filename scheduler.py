@@ -83,7 +83,11 @@ def match(tutors, students):
         tutor = findNextTutor(tutors, matching)
     return matching
 
-def report(students):
+def report(tutors, students, matching):
+    print("")
+    for tutor in matching:
+        print(tutor, ":", matching[tutor])
+
     unmatchedStudents = []
     subjects = dict()
     for student in students:
@@ -93,18 +97,45 @@ def report(students):
     print(f"\nthere are {len(unmatchedStudents)} unmatched students:", unmatchedStudents)
     print("\nTheir subjects are", subjects)
 
-def res():
-    tutors, students = createData()
-    for tutor in tutors:
-        print(tutor, [students[i].name for i in tutor.prefList], "\n")
-    matching = match(tutors, students)
-    print("\n")
-    for tutor in matching:
-        print(tutor, ":", matching[tutor])
-    report(students)
     unmatchedTutors = []
     for tutor in tutors:
         if (not tutor in matching): unmatchedTutors.append(tutor)
     print(f"\nthere are {len(unmatchedTutors)} unmatched tutors:", unmatchedTutors)
 
-res()
+def getTime(time):
+    res = ""
+    while (time[0].isdigit()):
+        res += time[0]
+        time = time[1:]
+    res += "-" + str((int(res) + 1) % 12)
+    res += time
+    return res
+
+def getRow(tutor, matching):
+    first, last = tutor.name.split()[0], tutor.name.split()[-1]
+    res = [tutor.email, first, last, "", tutor.subjects]
+    if (not tutor in matching):
+        return res + [str(tutor.numSessions)]
+    else: 
+        res += [str(tutor.numSessions - len(matching[tutor]))]
+    for session in matching[tutor]:
+        students = [student.name for student in session.students]
+        time = getTime(session.time)
+        res += [", ".join(students), time, session.subject]
+    return res
+
+def getSchedule():
+    tutors, students = createData()
+    # for tutor in tutors:
+    #     print(tutor, [students[i].name for i in tutor.prefList], "\n")
+    matching = match(tutors, students)
+    # report(tutors, students, matching)
+    
+    with open("data/schedule.csv", "w") as csvfile:
+        scheduleWriter = csv.writer(csvfile, delimiter = ",")
+        scheduleWriter.writerow(["Email", "First Name", "Last Name", "Send Filter", "Subject", 
+            "Classes Left", "Class 1", "Time 1", "Subject 1", "Class 2", "Time 2", "Subject 2"])
+        for tutor in tutors:
+            scheduleWriter.writerow(getRow(tutor, matching))
+
+getSchedule()
