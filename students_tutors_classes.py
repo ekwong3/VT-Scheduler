@@ -71,8 +71,26 @@ class Tutor:
         self.groupStudents()
         self.prefList = [students.index(student) for student in self.prefList]
     
+    def findLargestGroup(self, groups):
+        largestSize = 0
+        largestGroup = None
+        for group in groups:
+            if (len(groups[group]) > largestSize):
+                largestSize = len(groups[group])
+                largestGroup = group
+        return largestGroup
+
     def groupStudents(self):
-        return
+        groups = dict()
+        res = []
+        for student in self.prefList:
+            subject = student.subject
+            groups[subject] = groups.get(subject, []) + [student]
+        while (groups != dict()):
+            largestGroup = self.findLargestGroup(groups)
+            res += groups.pop(largestGroup)
+        self.prefList = res
+        self.prefList.reverse()
 
 class Student:
     def __init__(self, email, pfirst, plast, phone, firstName, lastName, school, grade, subject, times, other, pr, u, *garbage):
