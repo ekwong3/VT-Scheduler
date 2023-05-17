@@ -84,9 +84,9 @@ def match(tutors, students):
     return matching
 
 def report(tutors, students, matching):
-    print("")
-    for tutor in matching:
-        print(tutor, ":", matching[tutor])
+    # print("")
+    # for tutor in matching:
+    #     print(tutor, ":", matching[tutor])
 
     unmatchedStudents = []
     subjects = dict()
@@ -94,7 +94,7 @@ def report(tutors, students, matching):
         if (not student.matched):
             unmatchedStudents.append(student)
             subjects[student.subject] = subjects.get(student.subject, []) + [student]
-    print(f"\nthere are {len(unmatchedStudents)} unmatched students:", unmatchedStudents)
+    print(f"\nThere are {len(unmatchedStudents)} unmatched students:", unmatchedStudents)
     print("\nTheir subjects are", subjects)
 
     unmatchedTutors = []
@@ -129,7 +129,7 @@ def getSchedule():
     # for tutor in tutors:
     #     print(tutor, [students[i].name for i in tutor.prefList], "\n")
     matching = match(tutors, students)
-    # report(tutors, students, matching)
+    report(tutors, students, matching)
     
     with open("data/schedule.csv", "w") as csvfile:
         scheduleWriter = csv.writer(csvfile, delimiter = ",")

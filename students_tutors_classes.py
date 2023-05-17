@@ -1,5 +1,8 @@
 import copy
 
+MIN_SESSIONS = 1
+MAX_STUDENTS = 5
+
 def parseTimes(times):
     res = set()
     if times == "": return res
@@ -34,8 +37,8 @@ class Tutor:
         self.email = email
         self.name = cleanup(fName + " " + lName)
         self.info = (school, grade)
-        self.numSessions = int(sessions)
-        self.numStudents = int(numStudents)
+        self.numSessions = MIN_SESSIONS if not sessions[0].isdigit() else int(sessions[0])
+        self.numStudents = MAX_STUDENTS if not numStudents[0].isdigit() else int(numStudents[0])
         self.subjects = subjects
         self.times = parseTimes(times)
         self.prefList = []
