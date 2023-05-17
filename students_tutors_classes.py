@@ -107,7 +107,7 @@ class Student:
         self.prio = True if pr == "Yes" else False
         self.understanding = int(u)
         self.matched = False
-        self.tutor = None
+        self.session = None
 
     def __repr__(self):
         times = getTimes(self.times)
@@ -142,7 +142,7 @@ class Session:
         self.time = times.pop()
         self.students.append(student)
         self.capacity -= 1
-        students[index].tutor = self.tutor
+        students[index].session = self
         students[index].matched = True
     
     def canAdd(self, student):

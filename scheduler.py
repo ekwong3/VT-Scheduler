@@ -54,16 +54,16 @@ def addToMatching(tutor, index, matching, students):
                 matching[tutor].append(session)
 
 def removeFromMatching(student, matching):
-    for session in matching[student.tutor]:
+    for session in matching[student.session.tutor]:
         if student in session.students:
             session.remove(student)
             session.capacity += 1
             if (session.students == []):
-                matching[student.tutor].remove(session)
+                matching[student.session.tutor].remove(session)
             return
 
 def betterFit(tutor, student, matching):
-    oldTutor = student.tutor
+    oldTutor = student.session.tutor
     if (not tutor in matching and len(matching[oldTutor]) > 1): return True
     return False
 
@@ -111,7 +111,7 @@ def getTime(time):
     res += time
     return res
 
-def getRow(tutor, matching):
+def getRowTutor(tutor, matching):
     first, last = tutor.name.split()[0], tutor.name.split()[-1]
     res = [tutor.email, first, last, "", tutor.subjects]
     if (not tutor in matching):
@@ -124,6 +124,16 @@ def getRow(tutor, matching):
         res += [", ".join(students), time, session.subject]
     return res
 
+def getRowStudent(student):
+    res = [student.email, student.parent, "", student.name]
+    if (not student.matched): 
+        return res
+    time = getTime(student.session.time)
+    res += [time, student.subject, student.session.tutor]
+    res += ["", student.session.tutor.link, ""]
+    return res
+
+
 def getSchedule():
     tutors, students = createData()
     # for tutor in tutors:
@@ -131,11 +141,18 @@ def getSchedule():
     matching = match(tutors, students)
     report(tutors, students, matching)
     
-    with open("data/schedule.csv", "w") as csvfile:
+    with open("data/tutor schedule.csv", "w") as csvfile:
         scheduleWriter = csv.writer(csvfile, delimiter = ",")
         scheduleWriter.writerow(["Email", "First Name", "Last Name", "Send Filter", "Subject", 
             "Classes Left", "Class 1", "Time 1", "Subject 1", "Class 2", "Time 2", "Subject 2"])
         for tutor in tutors:
-            scheduleWriter.writerow(getRow(tutor, matching))
+            scheduleWriter.writerow(getRowTutor(tutor, matching))
+    
+    with open("data/student schedule.csv", "w") as csvfile:
+        scheduleWriter = csv.writer(csvfile, delimiter = ",")
+        scheduleWriter.writerow(["Email", "Parent Name", "Send Filter", "Student Name"
+            "Time", "Subject", "Tutor", "cc", "Tutor Link", "Password"])
+        for student in students:
+            scheduleWriter.writerow(getRowStudent(student))
 
 getSchedule()
